@@ -482,8 +482,8 @@ int main(int argc, char* argv[])
 	// std::cout << "substraction benchmark: " << std::endl << std::endl;
 	// gpu_benchmark(substraction_bench, bench_len);
 
-	// std::cout << "multiplication benchmark: " << std::endl << std::endl;
-	// gpu_benchmark(mul_bench, bench_len);
+	std::cout << "multiplication benchmark: " << std::endl << std::endl;
+	gpu_benchmark(mul_bench, bench_len);
 
 	// std::cout << "square benchmark: " << std::endl << std::endl;
 	// gpu_benchmark(square_bench, bench_len);
@@ -506,8 +506,8 @@ int main(int argc, char* argv[])
     // std::cout << "ECC affine exponentiation benchmark: " << std::endl << std::endl;
     // gpu_benchmark(affine_exp_curve_point_bench, bench_len);
 
-    std::cout << "ECC multi-exponentiation benchmark: " << std::endl << std::endl;
-    gpu_benchmark(multiexp_curve_point_bench, bench_len, OUTPUT_FILE, true);
+    // std::cout << "ECC multi-exponentiation benchmark: " << std::endl << std::endl;
+    // gpu_benchmark(multiexp_curve_point_bench, bench_len, OUTPUT_FILE, true);
 
     // std::cout << "FFT benchmark: " << std::endl << std::endl;
     // gpu_benchmark(FFT_bench, bench_len, OUTPUT_FILE);
