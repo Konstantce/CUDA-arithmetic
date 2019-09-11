@@ -303,11 +303,11 @@ DEVICE_FUNC inline bool EQUAL(const uint256_g& lhs, const uint256_g& rhs)
 //helper functions for naive multiplication 
 
 DEVICE_FUNC inline uint32_t device_long_mul(uint32_t x, uint32_t y, uint32_t* high_ptr)
-	{
-		uint32_t high = __umulhi(x, y);
-		*high_ptr = high;
-		return x * y;
-	}
+{
+	uint32_t high = __umulhi(x, y);
+	*high_ptr = high;
+	return x * y;
+}
 
 DEVICE_FUNC inline uint32_t device_fused_add(uint32_t x, uint32_t y, uint32_t* high_ptr)
 {
