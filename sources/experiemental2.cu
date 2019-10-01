@@ -111,36 +111,22 @@ DEVICE_FUNC __forceinline__ RNS_PAIR RNS_MUL(const RNS_PAIR& left, const RNS_PAI
     return res;
 }
 
+#define ASM_REG(I) BOOST_PP_CAT(" x", I)
+#define ASM_REG_WITH_COMMA(I) BOOST_PP_CAT(ASM_REG(I), BOOST_PP_COMMA)
 
-#define ASM_REDUCTION(n) \
- BOOST_PP_EXPR_IF( \
-      BOOST_PP_GREATER_EQUAL(n, \
-      BOOST_PP_TUPLE_ELEM( \
-         4, n, \
-         (..., const, volatile, const volatile) \
-      ) \
-   ) \
-"mul.lo.u32   m, r0, q;\n\t" \
-"mad.lo.cc.u32 r0, m, n0, r0;\n\t" \
-"madc.hi.cc.u32 r1, m, n0, r1;\n\t" \
-"madc.hi.cc.u32 r2, m, n1, r2;\n\t" \
-"madc.hi.cc.u32 r3, m, n2, r3;\n\t" \
-"madc.hi.cc.u32 r4, m, n3, r4;\n\t" \
-"madc.hi.cc.u32  r5, m, n4, r5;\n\t" \
-"madc.hi.cc.u32  r6, m, n5, r6;\n\t" \
-"madc.hi.cc.u32  r7, m, n6, r7;\n\t" \
-"madc.hi.cc.u32  prefix_low, m, n7, prefix_low;\n\t" \
-"addc.u32  prefix_high, 0, 0;\n\t" \
-"mad.lo.cc.u32 r0, m, n1, r1;\n\t" \
-"madc.lo.cc.u32  r1, m, n2, r2;\n\t" \
-"madc.lo.cc.u32  r2, m, n3, r3;\n\t" \
-"madc.lo.cc.u32  r3, m, n4, r4;\n\t" \
-"madc.lo.cc.u32  r4, m, n5, r5;\n\t" \
-"madc.lo.cc.u32  r5, m, n6, r6;\n\t" \
-"madc.lo.cc.u32  r6, m, n7, r7;\n\t" \
-"addc.cc.u32  r7, prefix_low, 0;\n\t" \
-"addc.u32  prefix_low, prefix_high, 0;\n\t"
+#define ASM_REDUCTION_STEP(I, _) \ 
+	BOOST_PP_IF(BOOST_PP_EQUAL(I, 0),
+		BOOST_PP_SEQ_CAT(("mul.hi.cc.u32 r0, r0, c\n\t"),\
+		BOOST_PP_SEQ_CAT(("madc.hi.u32")(ASM_REG_WITH_COMMA(I))(ASM_REG_WITH_COMMA(I))(" c, 0;\n\t"))\
+	BOOST_PP_SEQ_CAT(("madc.lo.cc.u32")(ASM_REG_WITH_COMMA(I))(ASM_REG_WITH_COMMA(BOOST_PP_INC(I)))(" c,")(ASM_REG(I))(";\n\t"))
 
+#define ASM_REDUCTION(N, OVERFLOW_FLAG) \
+	"mad.lo.cc.u32 r0, x0, c, r0;\n\t"\
+	"addc.u32 r1, r1, 0;\n\t"\
+	BOOST_PP_REPEAT(N, ASM_REDUCTION_STEP, 0)\
+	BOOST_PP_IF(OVERFOW_FLAG,\ 
+		BOOST_PP_SEQ_CAT(("madc.hi.u32")(ASM_REG_WITH_COMMA(N))(ASM_REG_WITH_COMMA(N))(" c, 0;\n\t"),\
+		BOOST_PP_EMPTY())
 
 DEVICE_FUNC __forceinline__ uint32_t RNS_RED(const uint256_g& elem, uint32_t modulus)
 {
@@ -152,7 +138,7 @@ DEVICE_FUNC __forceinline__ uint32_t RNS_RED(const uint256_g& elem, uint32_t mod
     // 2. While q_i > 0 do the following:
         // 2.1 q_{i+1} = q_i*c/ (b^t), r_{i+i} = q_i*c - q_{i+i}*b^t.
         // 2.2 i = i + 1, r = r + r_i.
-    // 3. While r > m do: r = r — m.
+    // 3. While r > m do: r = r — m. (NB: this loop is executed at most 2 times)
     // 4. Return(r).
 
     //m = 2^32 - c
@@ -161,7 +147,7 @@ DEVICE_FUNC __forceinline__ uint32_t RNS_RED(const uint256_g& elem, uint32_t mod
     uint64_t ret;
     
     asm (  "{\n\t"
-            ".reg .u32 r1, r0, x0, x1, x2, x3, x4, x5, x6, x7, c;\n\t"
+            ".reg .u32 r1, r0, x0, x1, x2, x3, x4, x5, x6, c;\n\t"
             "mov.b64         {r0,x0}, %1;\n\t"
             "mov.b64         {x1,x2}, %2;\n\t"
             "mov.b64         {x3,x4}, %3;\n\t"
@@ -170,24 +156,27 @@ DEVICE_FUNC __forceinline__ uint32_t RNS_RED(const uint256_g& elem, uint32_t mod
 
             //we assume that c is 8 bits long maximum!
 
-            ASM_REDUCTION(8);
-            ASM_REDUCTION(7);
-            ASM_REDUCTION(6);
-            ASM_REDUCTION(5);
-            ASM_REDUCTION(5);
-            ASM_REDUCTION(4);
-            ASM_REDUCTION(3);
-            ASM_REDUCTION(2);
-            ASM_REDUCTION(2);
-            ASM_REDUCTION(1); 
+            ASM_REDUCTION(7, true);
+			ASM_REDUCTION(7, false);
+            ASM_REDUCTION(6, false);
+            ASM_REDUCTION(5, false);
+            ASM_REDUCTION(5, true);
+            ASM_REDUCTION(4, false);
+            ASM_REDUCTION(3, false);
+            ASM_REDUCTION(2, false);
+            ASM_REDUCTION(1, true);
+            ASM_REDUCTION(1, false);
 
             "mov.b64        %0, {r0, r1}"
-            : "=l"(ret) : "l"(x.nn[0]), "l"(x.nn[1]), "l"(x.nn[2]), "l"(x.nn[3]), "l"(x.nn[4]),);
+            : "=l"(ret) : "l"(x.nn[0]), "l"(x.nn[1]), "l"(x.nn[2]), "l"(x.nn[3]), "l"(x.nn[4]));
 
     return ret;  
-
-
 }
+
+#undef ASM_REG
+#undef ASM_REG_WITH_COMMA
+#undef ASM_REDUCTION_STEP
+#undef ASM_REDUCTION
 
 
 DEVICE_FUNC __inline__ RNS_PAIR to_RNS_repr(const uint256_g& elem)
