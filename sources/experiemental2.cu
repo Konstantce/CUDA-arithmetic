@@ -128,6 +128,20 @@ DEVICE_FUNC __forceinline__ RNS_PAIR RNS_MUL(const RNS_PAIR& left, const RNS_PAI
 		BOOST_PP_SEQ_CAT(("madc.hi.u32")(ASM_REG_WITH_COMMA(N))(ASM_REG_WITH_COMMA(N))(" c, 0;\n\t"),\
 		BOOST_PP_EMPTY())
 
+#define ASM_SUB_REDUCTION()\
+	"setp.ge.u32 p, %41, 0;\n\t""
+		setp.CmpOp{ .ftz }.type         p[| q], a, b;
+	setp.CmpOp.BoolOp{ .ftz }.type  p[| q], a, b, { !}c;
+
+	.CmpOp = { eq, ne, lt, gt, ge, lo, ls, hi, hs,
+				equ, neu, ltu, leu, gtu, geu, num, nan };
+	.BoolOp = { and, or ,xor };
+	.type = { .b16, .b32, .b64,
+				.u16, .u32, .u64,
+				.s16, .s32, .s64,
+					  .f32, .f64 };
+	"@p  bra $label1; \n\t"
+
 DEVICE_FUNC __forceinline__ uint32_t RNS_RED(const uint256_g& elem, uint32_t modulus)
 {
     // algorithm 14.47 from handbook of applied cryptography
@@ -144,10 +158,11 @@ DEVICE_FUNC __forceinline__ uint32_t RNS_RED(const uint256_g& elem, uint32_t mod
     //m = 2^32 - c
 
     uint64_t c = { ~modulus, 0};
-    uint64_t ret;
+    uint32_t ret;
     
     asm (  "{\n\t"
             ".reg .u32 r1, r0, x0, x1, x2, x3, x4, x5, x6, c;\n\t"
+			".pred p"
             "mov.b64         {r0,x0}, %1;\n\t"
             "mov.b64         {x1,x2}, %2;\n\t"
             "mov.b64         {x3,x4}, %3;\n\t"
@@ -156,20 +171,23 @@ DEVICE_FUNC __forceinline__ uint32_t RNS_RED(const uint256_g& elem, uint32_t mod
 
             //we assume that c is 8 bits long maximum!
 
-            ASM_REDUCTION(7, true);
-			ASM_REDUCTION(7, false);
-            ASM_REDUCTION(6, false);
-            ASM_REDUCTION(5, false);
-            ASM_REDUCTION(5, true);
-            ASM_REDUCTION(4, false);
-            ASM_REDUCTION(3, false);
-            ASM_REDUCTION(2, false);
-            ASM_REDUCTION(1, true);
-            ASM_REDUCTION(1, false);
+            ASM_REDUCTION(7, true)
+			ASM_REDUCTION(7, false)
+            ASM_REDUCTION(6, false)
+            ASM_REDUCTION(5, false)
+            ASM_REDUCTION(5, true)
+            ASM_REDUCTION(4, false)
+            ASM_REDUCTION(3, false)
+            ASM_REDUCTION(2, false)
+            ASM_REDUCTION(1, true)
+            ASM_REDUCTION(1, false)
 
-            "mov.b64        %0, {r0, r1}"
-            : "=l"(ret) : "l"(x.nn[0]), "l"(x.nn[1]), "l"(x.nn[2]), "l"(x.nn[3]), "l"(x.nn[4]));
+			ASM_SUB_REDUCTION()
+			ASM_SUB_REDUCTION()
 
+            "mov.b32 %0, r0;\n\t"
+            : "=r"(ret) : "l"(x.nn[0]), "l"(x.nn[1]), "l"(x.nn[2]), "l"(x.nn[3]), "l"(x.nn[4]));
+	
     return ret;  
 }
 
@@ -177,6 +195,7 @@ DEVICE_FUNC __forceinline__ uint32_t RNS_RED(const uint256_g& elem, uint32_t mod
 #undef ASM_REG_WITH_COMMA
 #undef ASM_REDUCTION_STEP
 #undef ASM_REDUCTION
+#undef ASM_SUB_REDUCTION
 
 
 DEVICE_FUNC __inline__ RNS_PAIR to_RNS_repr(const uint256_g& elem)
