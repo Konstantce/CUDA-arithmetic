@@ -319,7 +319,7 @@ void mul_uint256_to_512_asm_with_allocation_driver(uint256_g*, uint256_g*, uint5
 void mul_uint256_to_512_asm_longregs_driver(uint256_g*, uint256_g*, uint512_g*, size_t);
 void mul_uint256_to_512_Karatsuba_driver(uint256_g*, uint256_g*, uint512_g*, size_t);
 void mul_uint256_to_512_asm_with_shuffle_driver(uint256_g*, uint256_g*, uint512_g*, size_t);
-void warp_based_mul_naive_driver(uint256_g*, uint256_g*, uint512_g*, size_t);
+//void warp_based_mul_naive_driver(uint256_g*, uint256_g*, uint512_g*, size_t);
 
 mul_func_vec_t mul_bench = {
     {"naive approach", mul_uint256_to_512_naive_driver},
@@ -328,7 +328,7 @@ mul_func_vec_t mul_bench = {
 	{"asm with longregs", mul_uint256_to_512_asm_longregs_driver},
     {"Karatsuba", mul_uint256_to_512_Karatsuba_driver},
     {"asm with shuffles", mul_uint256_to_512_asm_with_shuffle_driver},
-    {"warp-based approach", warp_based_mul_naive_driver}
+    //{"warp-based approach", warp_based_mul_naive_driver}
 };
 
 void square_uint256_to_512_naive_driver(uint256_g*, uint256_g*, uint512_g*, size_t);
@@ -343,18 +343,18 @@ void mont_mul_256_naive_SOS_driver(uint256_g*, uint256_g*, uint256_g*, size_t);
 void mont_mul_256_asm_SOS_driver(uint256_g*, uint256_g*, uint256_g*, size_t);
 void mont_mul_256_naive_CIOS_driver(uint256_g*, uint256_g*, uint256_g*, size_t);
 void mont_mul_256_asm_CIOS_driver(uint256_g*, uint256_g*, uint256_g*, size_t);
-void mont_mul_warp_based_driver(uint256_g*, uint256_g*, uint256_g*, size_t);
-void mont_mul_warp_based_ver2_driver(uint256_g*, uint256_g*, uint256_g*, size_t);
-void mont_mul_warp_based_asm_driver(uint256_g*, uint256_g*, uint256_g*, size_t);
+//void mont_mul_warp_based_driver(uint256_g*, uint256_g*, uint256_g*, size_t);
+//void mont_mul_warp_based_ver2_driver(uint256_g*, uint256_g*, uint256_g*, size_t);
+//void mont_mul_warp_based_asm_driver(uint256_g*, uint256_g*, uint256_g*, size_t);
 
 general_func_vec_t mont_mul_bench = {
     {"naive SOS", mont_mul_256_naive_SOS_driver},
 	{"asm SOS", mont_mul_256_asm_SOS_driver},
 	{"naive CIOS", mont_mul_256_naive_CIOS_driver},
 	{"asm CIOS", mont_mul_256_asm_CIOS_driver},
-    {"warp-based approach using COS", mont_mul_warp_based_driver},
-    {"warp-based approach using CIOS", mont_mul_warp_based_ver2_driver},
-    {"warp-based approach using CIOS (asm)", mont_mul_warp_based_asm_driver}
+    //{"warp-based approach using COS", mont_mul_warp_based_driver},
+    //{"warp-based approach using CIOS", mont_mul_warp_based_ver2_driver},
+    //{"warp-based approach using CIOS (asm)", mont_mul_warp_based_asm_driver}
 };
 
 
@@ -423,7 +423,7 @@ void naive_multiexp_kernel_warp_level_atomics_driver(affine_point*, uint256_g*, 
 void naive_multiexp_kernel_block_level_atomics_driver(affine_point*, uint256_g*, ec_point*, size_t);
 void naive_multiexp_kernel_block_level_recursion_driver(affine_point*, uint256_g*, ec_point*, size_t);
 void small_Pippenger_driver(affine_point*, uint256_g*, ec_point*, size_t);
-void large_Pippenger_driver(affine_point*, uint256_g*, ec_point*, size_t);
+//void large_Pippenger_driver(affine_point*, uint256_g*, ec_point*, size_t);
 void sorting_based_Pippenger_driver(affine_point*, uint256_g*, ec_point*, size_t);
 
 
@@ -432,7 +432,7 @@ ecc_multiexp_func_vec_t multiexp_curve_point_bench = {
     //{"naive block level approach with atomics", naive_multiexp_kernel_block_level_atomics_driver},
     //{"naive block level approach with recursion", naive_multiexp_kernel_block_level_recursion_driver},
     //{"Pippenger: 2**8 elems per bin", small_Pippenger_driver},
-    {"Pippenger: 2**16 elems per bin", large_Pippenger_driver},
+    //{"Pippenger: 2**16 elems per bin", large_Pippenger_driver},
     //{"Sorting based Pippenger", sorting_based_Pippenger_driver}
 };
 
@@ -482,8 +482,8 @@ int main(int argc, char* argv[])
 	// std::cout << "substraction benchmark: " << std::endl << std::endl;
 	// gpu_benchmark(substraction_bench, bench_len);
 
-	std::cout << "multiplication benchmark: " << std::endl << std::endl;
-	gpu_benchmark(mul_bench, bench_len);
+	//std::cout << "multiplication benchmark: " << std::endl << std::endl;
+	//gpu_benchmark(mul_bench, bench_len);
 
 	// std::cout << "square benchmark: " << std::endl << std::endl;
 	// gpu_benchmark(square_bench, bench_len);
@@ -509,8 +509,8 @@ int main(int argc, char* argv[])
     // std::cout << "ECC multi-exponentiation benchmark: " << std::endl << std::endl;
     // gpu_benchmark(multiexp_curve_point_bench, bench_len, OUTPUT_FILE, true);
 
-    // std::cout << "FFT benchmark: " << std::endl << std::endl;
-    // gpu_benchmark(FFT_bench, bench_len, OUTPUT_FILE);
+    std::cout << "FFT benchmark: " << std::endl << std::endl;
+    gpu_benchmark(FFT_bench, bench_len, OUTPUT_FILE);
    
     return 0;
 }

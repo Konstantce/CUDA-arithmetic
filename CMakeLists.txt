@@ -16,5 +16,8 @@ else()
     message( FATAL_ERROR ${GPU_ARCH})
 endif()
 
+set(POSEIDON_ONLY ON)
+
+
 include_directories(include)
 add_subdirectory(sources)

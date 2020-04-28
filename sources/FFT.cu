@@ -1,4 +1,5 @@
 #include "cuda_structs.h"
+using uint = uint32_t;
 
 //FFT (we propose very naive realization)
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -14,6 +15,18 @@
 //Also have a loot at GPU gems
 
 //NB: arr should be a power of two
+
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
+
+
+static inline int __builtin_clz(uint32_t x) {
+	//unsigned long ret;
+	//_BitScanReverse(&ret, x);
+	//return (int)(31 ^ ret);
+	return (int)__lzcnt(x);
+}
 
 
 //commom FFT routines
