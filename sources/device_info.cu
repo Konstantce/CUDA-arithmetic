@@ -16,6 +16,7 @@ void get_device_info()
 	uint32_t max_threads_per_block = prop.maxThreadsPerBlock;
 	uint32_t max_threads_per_multiprocessor = prop.maxThreadsPerMultiProcessor;
 
+    std::cout << "Device: " << prop.name << std::endl;
     std::cout << "SM count: " << sm_count << std::endl;
     std::cout << "warp size: " << warp_size << std::endl;
     std::cout << "Number of shared memory per block (in bytes): " << shared_mem_per_block << std::endl;
