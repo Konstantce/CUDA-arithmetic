@@ -40,6 +40,19 @@ Geometry find_optimal_geometry(T func)
 }
 
 
+// inspired by "Hacker's delight"
+uint32_t round_down_to_power_of_2(uint32_t x) 
+{
+    x = x | (x >> 1);
+    x = x | (x >> 2);
+    x = x | (x >> 4);
+    x = x | (x >> 8);
+    x = x | (x >> 16);
+    
+    return x - (x >> 1);
+}
+
+
 int main(int argc, char* argv[])
 {
     embedded_field* host_arr = nullptr;
@@ -132,12 +145,14 @@ int main(int argc, char* argv[])
         Geometry poseidon_gm = find_optimal_geometry(poseidon);     
         start = std::chrono::high_resolution_clock::now();
 
+        std::cout << "POSEIDON GEOMETRY : (num_blocks, num_threads_per_block): (" << poseidon_gm.grid_size << ", " << poseidon_gm.block_size << ")" << std::endl << std::endl; 
+
         poseidon<< <poseidon_gm.grid_size, poseidon_gm.block_size >> > (device_arr, BENCH_SIZE);
 
         cudaStatus = cudaDeviceSynchronize();
         if (cudaStatus != cudaSuccess)
         {
-            fprintf(stderr, "poseidon kerkem failed with error code!\n", cudaStatus);
+            fprintf(stderr, "poseidon kernel failed with error code %s\n", cudaStatus);
             return_error_code = -1;
             goto Error;
         }
@@ -161,6 +176,49 @@ int main(int argc, char* argv[])
         end = std::chrono::high_resolution_clock::now();
         duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
         std::cout << "MEMCOPY: DEVICE -> HOST took " << std::dec << duration << "ns." << std::endl << std::endl;
+    }
+
+    {
+        // here we construct merklee tree on GPU 
+
+        // for benchmarking purposes only binary tree are supported
+        assert(POSEIDON_TREE_COLLAPSING_FACTOR == 2);
+        
+        uint32_t tree_size = round_down_to_power_of_2(BENCH_SIZE); 
+        std::cout << "POSEIDON MERKLE TREE CONSTRUCTION benchmark for size: " << tree_size << std::endl;
+        
+        Geometry poseidon_gm = find_optimal_geometry(poseidon_merkle_tree_construction_iteration);     
+        start = std::chrono::high_resolution_clock::now();
+
+        std::cout << "POSEIDON MERKLE TREE GEOMETRY : (num_blocks, num_threads_per_block): (" << poseidon_gm.grid_size << ", " << poseidon_gm.block_size << ")" << std::endl << std::endl; 
+
+        while (tree_size > THREADS_PER_BLOCK * POSEIDON_TREE_COLLAPSING_FACTOR)
+        {
+            poseidon_merkle_tree_construction_iteration<< <poseidon_gm.grid_size, poseidon_gm.block_size >> >(device_arr, tree_size);
+            tree_size /= POSEIDON_TREE_COLLAPSING_FACTOR;
+
+            cudaStatus = cudaDeviceSynchronize();
+            if (cudaStatus != cudaSuccess)
+            {
+                fprintf(stderr, "poseidon merkle tree construction failed with error code %s\n", cudaStatus);
+                return_error_code = -1;
+                goto Error;
+            }
+        }
+        
+        poseidon_merkle_tree_single_block << <1, THREADS_PER_BLOCK >> >(device_arr, tree_size);
+        cudaStatus = cudaDeviceSynchronize();
+        
+        if (cudaStatus != cudaSuccess)
+        {
+            fprintf(stderr, "poseidon merkle tree construction failed (on last iteration) with error code %s\n", cudaStatus);
+            return_error_code = -1;
+            goto Error;
+        }
+
+        end = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        std::cout << "POSEIDON MERKLE TREE CONSTRUCTION on GPU took " << std::dec << duration << "ns." << std::endl << std::endl;
     }
 
 Error:
