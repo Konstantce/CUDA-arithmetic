@@ -1,0 +1,5 @@
+/home/k/Desktop/CUDA/CUDA-arithmetic/CMakeFiles/rebuild_cache.dir
+/home/k/Desktop/CUDA/CUDA-arithmetic/CMakeFiles/edit_cache.dir
+/home/k/Desktop/CUDA/CUDA-arithmetic/sources/CMakeFiles/rebuild_cache.dir
+/home/k/Desktop/CUDA/CUDA-arithmetic/sources/CMakeFiles/poseidon.dir
+/home/k/Desktop/CUDA/CUDA-arithmetic/sources/CMakeFiles/edit_cache.dir

@@ -154,7 +154,7 @@ __global__ void poseidon_merkle_tree_construction_iteration(embedded_field* __re
 __global__ void poseidon_merkle_tree_single_block(embedded_field* __restrict__ arr, uint32_t arr_len)
 {
     assert(arr_len <= POSEIDON_TREE_COLLAPSING_FACTOR * THREADS_PER_BLOCK);
-    assert(blockDim.x = THREADS_PER_BLOCK);
+    assert(blockDim.x == THREADS_PER_BLOCK);
     assert(blockIdx.x == 0);
 
     uint32_t layer_size = arr_len;

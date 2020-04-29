@@ -2,9 +2,10 @@ if(POSEIDON_ONLY)
     message("compiling only poseidon libraies")
 
     add_executable(poseidon poseidon.cu poseidon_constants.cu poseidon_main.cu finitefield.cu constants.cu basic_arithmetic.cu
-    device_info.cu Cuda_init.cu)
+    device_info.cu CUDA_init.cu)
     target_compile_features(poseidon PUBLIC cxx_std_14)
     set_target_properties(poseidon PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
 else(POSEIDON_ONLY)
     add_executable(cuda_benches main.cu basic_arithmetic.cu constants.cu kernels.cu mont_mul.cu mul_128_to_256.cu
     mul_256_to_512.cu square_256_to_512.cu ell_point.cu ecc_exp.cu CUDA_init.cu finitefield.cu FFT.cu

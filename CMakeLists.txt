@@ -18,6 +18,12 @@ endif()
 
 set(POSEIDON_ONLY ON)
 
+set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR})
+# Set the output folder where your program will be created
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 
 include_directories(include)
 add_subdirectory(sources)
