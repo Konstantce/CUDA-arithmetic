@@ -3,3 +3,7 @@ build
 benches.txt
 *.json
 .vs/
+bin
+Makefile
+cmake_install.cmake
+CmakeCache.txt
